@@ -32,7 +32,6 @@ func HandleVote(g *gin.Context) {
 			"msg": "Invalid Form",
 		})
 	} else {
-		//TODO:完成投票数+1这一操作，注意不要出现并发上的问题，加油 qwq
 		//推荐自己完成，也可以使用model/user.go中给出的方法
 		//err = model.AddVoteForUser(form.UserName)
 		//if err != nil {

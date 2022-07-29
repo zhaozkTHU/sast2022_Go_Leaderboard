@@ -26,7 +26,6 @@ func HandleUserHistory(g *gin.Context) {
 	}
 }
 
-//TODO:在这里完成接受提交内容，进行评判的handle function
 func HandleSubmit(g *gin.Context) {
 	type SubmitForm struct {
 		UserName string `json:"user"`
@@ -40,7 +39,7 @@ func HandleSubmit(g *gin.Context) {
 			"code": -3,
 			"msg":  "提交内容非法呜呜",
 		})
-	} else if submit.UserName == "" || submit.Content == "" || submit.Avatar == "" {
+	} else if submit.UserName == "" || submit.Content == "" {
 		g.JSON(http.StatusBadRequest, gin.H{
 			"code": 1,
 			"msg":  "参数不全啊",
@@ -61,6 +60,7 @@ func HandleSubmit(g *gin.Context) {
 			"msg":  "非法内容呜呜呜",
 		})
 	} else {
+		model.CreateSubmission(submit.UserName, submit.Avatar, submit.Content)
 		g.JSON(http.StatusAccepted, gin.H{
 			"code": 0,
 			"msg":  "提交成功",

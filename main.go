@@ -9,5 +9,5 @@ import (
 func main() {
 	r := route.InitRoute()
 	model.BuildConnection(config.Parse())
-	r.Run(":8080")
+	r.Run(":10001")
 }

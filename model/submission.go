@@ -7,44 +7,6 @@ import (
 	"time"
 )
 
-//Judge 计算分数
-func Judge(content string) ([4]int, error) {
-	//处理答案
-	f, _ := ioutil.ReadFile("ground_truth.txt")
-	ground_truth := string(f)
-	answer_strings := strings.Split(ground_truth, "\n") //行分割
-	var answer_dict map[string][3]string
-	for i := 1; i < len(answer_strings); i++ {
-		a := strings.Split(answer_strings[i], ",")
-		answer_dict[a[0]] = [3]string{a[1], a[2], a[3]}
-	}
-
-	//处理提交结果
-	submit := strings.Split(content, "\n")
-	var submit_dict map[string][3]string
-	for i := 1; i < len(submit); i++ {
-		a := strings.Split(submit[i], ",")
-		submit_dict[a[0]] = [3]string{a[1], a[2], a[3]}
-	}
-
-	//判断分数
-	var score [4]int
-	for key, value := range submit_dict {
-		tmp := 0
-		for i := 0; i < 3; i++ {
-			if value[i] == answer_dict[key][i] {
-				score[i+1]++
-				tmp++
-			}
-		}
-		if tmp == 3 {
-			score[0]++
-		}
-	}
-
-	return score, nil
-}
-
 // Submission hint: 如果你想直接返回结构体，可以考虑在这里加上`json`的tag
 type Submission struct {
 	ID        uint   `gorm:"not null;autoIncrement"`
@@ -69,7 +31,42 @@ type ReturnSub struct {
 	Subscore3 int
 }
 
-/*TODO: 添加相应的与数据库交互逻辑，补全参数和返回值，可以参考user.go的设计思路*/
+func Judge(content string) ([4]int, error) {
+	//处理答案
+	f, _ := ioutil.ReadFile("ground_truth.txt")
+	groundTruth := string(f)
+	answerStrings := strings.Split(groundTruth, "\n") //行分割
+	var answerDict map[string][3]string
+	for i := 1; i < len(answerStrings); i++ {
+		a := strings.Split(answerStrings[i], ",")
+		answerDict[a[0]] = [3]string{a[1], a[2], a[3]}
+	}
+
+	//处理提交结果
+	submit := strings.Split(content, "\n")
+	var submit_dict map[string][3]string
+	for i := 1; i < len(submit); i++ {
+		a := strings.Split(submit[i], ",")
+		submit_dict[a[0]] = [3]string{a[1], a[2], a[3]}
+	}
+
+	//判断分数
+	var score [4]int
+	for key, value := range submit_dict {
+		tmp := 0
+		for i := 0; i < 3; i++ {
+			if value[i] == answerDict[key][i] {
+				score[i+1]++
+				tmp++
+			}
+		}
+		if tmp == 3 {
+			score[0]++
+		}
+	}
+
+	return score, nil
+}
 
 func CreateSubmission(name string, avatar string, content string) (error, uint) {
 	err, _ := GetUserByName(name)
@@ -124,10 +121,10 @@ func GetUserSubmissions(name string) (error, []ReturnSub) {
 
 func GetLeaderBoard() []ReturnSub {
 	//一个可行的思路，先全部选出submission，然后手动选出每个用户的最后一次提交
-	var AllSub []ReturnSub
+	var AllSub []Submission
 	DB.Model(&Submission{}).Where("1=1").Find(&AllSub)
 	//在这里添加逻辑！
-	var result map[string]ReturnSub
+	result := make(map[string]Submission)
 	for i := 0; i < len(AllSub); i++ {
 		last, err := result[AllSub[i].UserName]
 		if !err {
@@ -140,7 +137,18 @@ func GetLeaderBoard() []ReturnSub {
 	}
 	var ReturnSlice = []ReturnSub{}
 	for _, k := range result {
-		ReturnSlice = append(ReturnSlice, k)
+		var votes User
+		DB.Model(&User{}).Where("user_name=?", k.UserName).First(&votes)
+		ReturnSlice = append(ReturnSlice, ReturnSub{
+			UserName:  k.UserName,
+			Avatar:    k.Avatar,
+			CreatedAt: k.CreatedAt,
+			Score:     k.Score,
+			UserVotes: int(votes.Votes),
+			Subscore1: k.Subscore1,
+			Subscore2: k.Subscore2,
+			Subscore3: k.Subscore3,
+		})
 	}
 	sort.Slice(ReturnSlice, func(i, j int) bool { return ReturnSlice[i].Score > ReturnSlice[j].Score })
 
