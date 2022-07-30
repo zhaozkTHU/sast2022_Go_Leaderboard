@@ -10,7 +10,6 @@ func HandleGetBoard(g *gin.Context) {
 	g.JSON(200, model.GetLeaderBoard())
 }
 
-//TODO:在这里完成返回一个用户提交历史的Handle function
 func HandleUserHistory(g *gin.Context) {
 	username := g.Param("user")
 	err, user := model.GetUserByName(username)
@@ -39,7 +38,7 @@ func HandleSubmit(g *gin.Context) {
 			"code": -3,
 			"msg":  "提交内容非法呜呜",
 		})
-	} else if submit.UserName == "" || submit.Content == "" {
+	} else if len(submit.UserName) == 0 || len(submit.Content) == 0 {
 		g.JSON(http.StatusBadRequest, gin.H{
 			"code": 1,
 			"msg":  "参数不全啊",
@@ -60,7 +59,6 @@ func HandleSubmit(g *gin.Context) {
 			"msg":  "非法内容呜呜呜",
 		})
 	} else {
-		model.CreateSubmission(submit.UserName, submit.Avatar, submit.Content)
 		g.JSON(http.StatusAccepted, gin.H{
 			"code": 0,
 			"msg":  "提交成功",
